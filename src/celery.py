@@ -1,8 +1,8 @@
-import json
 import hashlib
 
 import redis
 from celery import Celery, Task
+from celery.exceptions import Ignore
 
 from src.malware_detection_model import MalwareDetectionPipeline
 from src.extractor import VirusTotalFeatureExtractor
@@ -32,8 +32,19 @@ class ModelTask(Task):
         return self.run(*args, **kwargs)
 
 
-@app_celery.task()
-def task_calculate_sha256(data: dict):
+@app_celery.task(bind=True, ignore_result=True)
+def task_pipeline(self, data: dict):
+    task_calculate_sha256.apply_async(
+        args=(data,),
+        task_id=self.request.id,
+    )
+    raise Ignore()
+
+
+@app_celery.task(bind=True, ignore_result=True)
+def task_calculate_sha256(self, data: dict):
+    self.update_state(state='PROGRESS', meta={'task': 'task_calculate_sha256'})
+    
     _hash = hashlib.sha256()
     buffer = bytearray(1024 * 128)
     buffer_view = memoryview(buffer)
@@ -42,31 +53,48 @@ def task_calculate_sha256(data: dict):
             _hash.update(buffer_view[:n])
     
     data['sha256'] = _hash.hexdigest()
-    return data
-
-
-@app_celery.task(bind=True)
-def task_search_hash_in_db(self, data: dict):
-    value = redis_store.get(data['sha256'])
-    if value is not None:
-        self.request.callbacks = None
-        return value
     
-    return data
+    task_search_hash_in_db.apply_async(
+        args=(data,),
+        task_id=self.request.id,
+    )
+    raise Ignore()
 
 
-@app_celery.task()
-def task_get_report(data: dict):
+@app_celery.task(bind=True, ignore_result=False)
+def task_search_hash_in_db(self, data: dict):
+    self.update_state(state='PROGRESS', meta={'task': 'task_search_hash_in_db'})
+    value = redis_store.get(data['sha256'])
+    
+    if value is not None:
+        return value    
+    
+    task_get_report.apply_async(
+        args=(data,),
+        task_id=self.request.id,
+    )
+    raise Ignore()
+    
+
+@app_celery.task(bind=True, ignore_result=True)
+def task_get_report(self, data: dict):
+    self.update_state(state='PROGRESS', meta={'task': 'task_get_report'})
     # TODO Add VT API
     
     reports_dir = DATA_DIR / 'pe-machine-learning-dataset' / 'reports'
     report_path = reports_dir / f'{data["sha256"]}.json'
     data['report'] = str(report_path)
-    return data
+    
+    task_classification.apply_async(
+        args=(data,),
+        task_id=self.request.id,
+    )
+    raise Ignore()
 
 
 @app_celery.task(bind=True, base=ModelTask)
 def task_classification(self, data: dict):
+    self.update_state(state='PROGRESS', meta={'task': 'task_classification'})
     extractor = VirusTotalFeatureExtractor.from_json(data['report'])
     corpus = '\n'.join(extract_texts(extractor))
     

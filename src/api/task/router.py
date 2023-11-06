@@ -1,4 +1,9 @@
+import json
+from uuid import uuid4
+from datetime import timedelta
+
 import aiofiles
+import redis.asyncio as aioredis
 from fastapi import (
     APIRouter,
     status,
@@ -6,18 +11,13 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
-from celery import chain
 
-from src.celery import (
-    task_calculate_sha256,
-    task_search_hash_in_db,
-    task_get_report,
-    task_classification,
-)
-from src.config import CACHE_DIR
+from src.celery import task_pipeline
+from src.config import CACHE_DIR, BACKEND_CONN_URI
 
 
 router = APIRouter(prefix='/task')
+redis_backend = aioredis.from_url(BACKEND_CONN_URI)
 
 
 @router.post('/create')
@@ -25,13 +25,38 @@ async def create_task(file: UploadFile):
     async with aiofiles.open(CACHE_DIR / file.filename, 'wb') as out_file:
         while content := await file.read(1024):
             await out_file.write(content)
-
-    task = chain(
-        task_calculate_sha256.s({'file_path': str(CACHE_DIR / file.filename)}),
-        task_search_hash_in_db.s(),
-        task_get_report.s(),
-        task_classification.s(),
-    ).apply_async()
+            
+    task_id = str(uuid4())
+    task_redis_key = f'celery-task-meta-{task_id}'
+    try:
+        await redis_backend.setex(
+            name=task_redis_key,
+            time=timedelta(weeks=1),
+            value=json.dumps(
+                {
+                    'task_id': task_id,
+                    'status': 'QUEUED'
+                }
+            )
+        )
+    except Exception:
+        return JSONResponse(
+            content='Internal Server Error',
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+        
+    try:
+        task_args = ({'file_path': str(CACHE_DIR / file.filename)},)
+        task = task_pipeline.apply_async(
+            args=task_args,
+            task_id=task_id,
+        )
+    except Exception:
+        await redis_backend.delete(task_redis_key)
+        return JSONResponse(
+            content='Internal Server Error',
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
     return JSONResponse(
         content={
@@ -50,6 +75,7 @@ async def task_status(task_id: str):
             content={
                 'task_id': task.id,
                 'status': task.status,
+                'info': task.info,
             },
             status_code=status.HTTP_202_ACCEPTED,
         )
@@ -59,6 +85,7 @@ async def task_status(task_id: str):
             content={
                 'task_id': task.id,
                 'status': task.status,
+                'info': task.info,
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
