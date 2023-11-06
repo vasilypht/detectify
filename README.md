@@ -34,6 +34,7 @@ Coming soon...
 ## Model v1.1.1
 
 The model was trained based on the dataset: [DikeDataset](https://github.com/iosifache/DikeDataset)
+Model weights: [Google Drive](https://drive.google.com/file/d/1gV8ZzvViB2iAro3-1g_Pi-bBxJ1kW2ax/view?usp=sharing)
 
 The architecture of the model consists of two models: ResNet-50 and Longformer
 ([kazzand/ru-longformer-tiny-16384](https://huggingface.co/kazzand/ru-longformer-tiny-16384)). Next, the outputs
