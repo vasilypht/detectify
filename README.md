@@ -1,5 +1,13 @@
 # Malware Detection Model
 
+> NOTE: The model was trained on a small dataset, which may affect the quality of
+> classification of new files.
+>
+> The author is not responsible for damages caused by misclassification.
+
+A malware detection model using dynamic analysis data. The model works for Windows
+operating system files: exe, dll, pe.
+
 ## Demo
 
 First you need to start the broker (RabbitMQ) and store (Redis) for the result:
@@ -31,10 +39,10 @@ python -m uvicorn src.main:app --host=127.0.0.1 --port=8100
 Coming soon...
 
 
-## Model v1.1.1
+## Model v1.2.1
 
 The model was trained based on the dataset: [DikeDataset](https://github.com/iosifache/DikeDataset)
-Model weights: [Google Drive](https://drive.google.com/file/d/1gV8ZzvViB2iAro3-1g_Pi-bBxJ1kW2ax/view?usp=sharing)
+Model weights (v1.1.1): [Google Drive](https://drive.google.com/file/d/1gV8ZzvViB2iAro3-1g_Pi-bBxJ1kW2ax/view?usp=sharing)
 
 The architecture of the model consists of two models: ResNet-50 and Longformer
 ([kazzand/ru-longformer-tiny-16384](https://huggingface.co/kazzand/ru-longformer-tiny-16384)). Next, the outputs
@@ -52,11 +60,15 @@ the best result is selected with the priority of the malicious class.
 
 ### Classification Report
 
+Accuracy: 0.999183
+F1-Macro: 0.999500
+
 |        label | precision | recall | f1-score | support |
 |-------------:|----------:|-------:|---------:|--------:|
-|       benign |      0.97 |   0.93 |     0.95 |     224 |
-|      malware |      0.98 |   0.99 |     0.99 |    1001 |
+|       benign |      1.00 |   1.00 |     1.00 |     224 |
+|      malware |      1.00 |   1.00 |     1.00 |    1001 |
 |              |           |        |          |         |
-|     accuracy |           |        |     0.98 |    1225 |
-|    macro avg |      0.98 |   0.96 |     0.97 |    1225 |
-| weighted avg |      0.98 |   0.98 |     0.98 |    1225 |
+|     accuracy |           |        |     1.00 |    1225 |
+|    macro avg |      1.00 |   1.00 |     1.00 |    1225 |
+| weighted avg |      1.00 |   1.00 |     1.00 |    1225 |
+
