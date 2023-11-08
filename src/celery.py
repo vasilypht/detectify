@@ -43,7 +43,13 @@ def task_pipeline(self, data: dict):
 
 @app_celery.task(bind=True, ignore_result=True)
 def task_calculate_sha256(self, data: dict):
-    self.update_state(state='PROGRESS', meta={'task': 'task_calculate_sha256'})
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'task': 'task_calculate_sha256',
+            'info': 'Hash calculation'
+        }
+    )
     
     _hash = hashlib.sha256()
     buffer = bytearray(1024 * 128)
@@ -63,7 +69,13 @@ def task_calculate_sha256(self, data: dict):
 
 @app_celery.task(bind=True, ignore_result=False)
 def task_search_hash_in_db(self, data: dict):
-    self.update_state(state='PROGRESS', meta={'task': 'task_search_hash_in_db'})
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'task': 'task_search_hash_in_db',
+            'info': 'Checking in the database',
+        }
+    )
     value = redis_store.get(data['sha256'])
     
     if value is not None:
@@ -78,7 +90,13 @@ def task_search_hash_in_db(self, data: dict):
 
 @app_celery.task(bind=True, ignore_result=True)
 def task_get_report(self, data: dict):
-    self.update_state(state='PROGRESS', meta={'task': 'task_get_report'})
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'task': 'task_get_report',
+            'info': 'Receiving a report',
+        }
+    )
     # TODO Add VT API
     
     reports_dir = DATA_DIR / 'pe-machine-learning-dataset' / 'reports'
@@ -94,7 +112,13 @@ def task_get_report(self, data: dict):
 
 @app_celery.task(bind=True, base=ModelTask)
 def task_classification(self, data: dict):
-    self.update_state(state='PROGRESS', meta={'task': 'task_classification'})
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'task': 'task_classification',
+            'info': 'Classification',
+        }
+    )
     extractor = VirusTotalFeatureExtractor.from_json(data['report'])
     corpus = '\n'.join(extract_texts(extractor))
     
