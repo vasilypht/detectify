@@ -30,18 +30,23 @@ After this, you can select an environment to interact with the model.
 To launch the API, use the following command:
 
 ```shell
-python -m uvicorn src.main:app --host=127.0.0.1 --port=8100
+python -m uvicorn src.app_api:app --host=127.0.0.1 --port=8100
 ```
 
 
 ### Gradio
 
-Coming soon...
+To launch the Gradio demo, use the following command:
+
+```shell
+python -m uvicorn src.app_web:app --host=127.0.0.1 --port=8100
+```
 
 
 ## Model v1.2.1
 
 The model was trained based on the dataset: [DikeDataset](https://github.com/iosifache/DikeDataset)
+
 Model weights (v1.1.1): [Google Drive](https://drive.google.com/file/d/1gV8ZzvViB2iAro3-1g_Pi-bBxJ1kW2ax/view?usp=sharing)
 
 The architecture of the model consists of two models: ResNet-50 and Longformer
@@ -61,6 +66,7 @@ the best result is selected with the priority of the malicious class.
 ### Classification Report
 
 Accuracy: 0.999183
+
 F1-Macro: 0.999500
 
 |        label | precision | recall | f1-score | support |
