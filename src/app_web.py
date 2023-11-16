@@ -80,6 +80,13 @@ def button_compute_clicked(redis_store, file, *args, **kwargs):
     }
 
 
+def input_file_changed(data):
+    if data:
+        return gr.Button.update(interactive=True)
+    else:
+        return gr.Button.update(interactive=False)
+
+
 with gr.Blocks(analytics_enabled=False) as demo:
     with gr.Row():
         with gr.Column():
@@ -94,13 +101,20 @@ with gr.Blocks(analytics_enabled=False) as demo:
                 )
                 button_compute = gr.Button(
                     value='Compute',
+                    interactive=False,
                 )
         
         with gr.Column():
             output_label = gr.Label()
     
+    input_file.change(
+        fn=lambda data: gr.Button.update(interactive=True) if data else gr.Button.update(interactive=False),
+        inputs=input_file,
+        outputs=button_compute,
+    )
+        
     button_clear.click(
-        fn=lambda: [None, None],
+        fn=lambda _: [None, None],
         inputs=None,
         outputs=[input_file, output_label]
     )
