@@ -7,17 +7,17 @@ from celery.exceptions import Ignore
 from src.malware_detection_model import MalwareDetectionPipeline
 from src.extractor import VirusTotalFeatureExtractor
 from src.parsers import extract_texts
-from .config import (
-    BROKER_CONN_URI,
-    BACKEND_CONN_URI,
-    STORE_CONN_URI,
+from src import config
+from src.config_loader import (
     DATA_DIR,
-    MODEL_DIR,
 )
 
 
-app_celery = Celery(broker=BROKER_CONN_URI, backend=BACKEND_CONN_URI)
-redis_store = redis.from_url(STORE_CONN_URI)
+app_celery = Celery(
+    broker=config.celery.broker_uri,
+    backend=config.celery.backend_uri
+)
+redis_store = redis.from_url(config.celery.store_uri)
 
 
 class ModelTask(Task):
@@ -27,7 +27,7 @@ class ModelTask(Task):
         
     def __call__(self, *args, **kwargs):
         if self.model is None:
-            self.model = MalwareDetectionPipeline(model_path=MODEL_DIR)
+            self.model = MalwareDetectionPipeline(model_path=config.model.path)
         
         return self.run(*args, **kwargs)
 

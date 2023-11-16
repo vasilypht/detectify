@@ -9,8 +9,9 @@ from redis import Redis
 from fastapi import FastAPI
 from celery.result import AsyncResult
 
+from src import config
 from src.celery import task_pipeline, app_celery
-from src.config import BACKEND_CONN_URI
+from src.constants import CeleryStatus
 
 
 app = FastAPI()
@@ -27,7 +28,7 @@ def with_redis_connection(redis_uri: str):
     return wrapped
         
 
-@with_redis_connection(BACKEND_CONN_URI)
+@with_redis_connection(config.celery.backend_uri)
 def button_compute_clicked(redis_store, file, *args, **kwargs):
     task_id = str(uuid4())
     task_redis_key = f'celery-task-meta-{task_id}'
@@ -38,7 +39,7 @@ def button_compute_clicked(redis_store, file, *args, **kwargs):
             value=json.dumps(
                 {
                     'task_id': task_id,
-                    'status': 'QUEUED'
+                    'status': CeleryStatus.QUEUED,
                 }
             )
         )
@@ -57,11 +58,11 @@ def button_compute_clicked(redis_store, file, *args, **kwargs):
     
     while True:
         task = AsyncResult(task.id, app=app_celery)
-        if task.status == 'QUEUED':
+        if task.status == CeleryStatus.QUEUED:
             yield 'QUEUED'
-        elif task.status == 'PROGRESS':
+        elif task.status == CeleryStatus.PROGRESS:
             yield f'PROGRESS - {task.info.get("info")}'
-        elif task.status == 'FAILURE':
+        elif task.status == CeleryStatus.FAILURE:
             return 'FAILURE - Internal Server Error'
         else:
             break

@@ -12,16 +12,18 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 
+from src import config
 from src.celery import task_pipeline
-from src.config import CACHE_DIR, BACKEND_CONN_URI
+from src.config_loader import CACHE_DIR
+from src.constants import CeleryStatus
 
 
 router = APIRouter(prefix='/task')
-redis_backend = aioredis.from_url(BACKEND_CONN_URI)
+redis_backend = aioredis.from_url(config.celery.backend_uri)
 
 
 @router.post('/create')
-async def create_task(file: UploadFile):
+async def create_task(file: UploadFile):    
     async with aiofiles.open(CACHE_DIR / file.filename, 'wb') as out_file:
         while content := await file.read(1024):
             await out_file.write(content)
@@ -35,7 +37,7 @@ async def create_task(file: UploadFile):
             value=json.dumps(
                 {
                     'task_id': task_id,
-                    'status': 'QUEUED'
+                    'status': CeleryStatus.QUEUED,
                 }
             )
         )
