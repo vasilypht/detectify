@@ -1,22 +1,72 @@
+import json
 import time
+import functools
+from uuid import uuid4
+from datetime import timedelta
 
 import gradio as gr
+from redis import Redis
 from fastapi import FastAPI
 from celery.result import AsyncResult
 
 from src.celery import task_pipeline, app_celery
+from src.config import BACKEND_CONN_URI
 
 
-def button_compute_clicked(file):
-    task = task_pipeline.delay({'file_path': file})
+app = FastAPI()
+
+
+def with_redis_connection(redis_uri: str):
+    def wrapped(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with Redis.from_url(redis_uri) as redis_store:
+                yield from func(redis_store, *args, **kwargs)
+                
+        return wrapper
+    return wrapped
+        
+
+@with_redis_connection(BACKEND_CONN_URI)
+def button_compute_clicked(redis_store, file, *args, **kwargs):
+    task_id = str(uuid4())
+    task_redis_key = f'celery-task-meta-{task_id}'
+    try:
+        redis_store.setex(
+            name=task_redis_key,
+            time=timedelta(weeks=1),
+            value=json.dumps(
+                {
+                    'task_id': task_id,
+                    'status': 'QUEUED'
+                }
+            )
+        )
+    except Exception:
+        return 'Error'
+        
+    try:
+        task_args = ({'file_path': file.name},)
+        task = task_pipeline.apply_async(
+            args=task_args,
+            task_id=task_id,
+        )
+    except Exception:
+        redis_store.delete(task_redis_key)
+        return 'Error'
+    
     while True:
         task = AsyncResult(task.id, app=app_celery)
-        if task.status not in ('QUEUED', 'PROGRESS'):
+        if task.status == 'QUEUED':
+            yield 'QUEUED'
+        elif task.status == 'PROGRESS':
+            yield f'PROGRESS - {task.info.get("info")}'
+        elif task.status == 'FAILURE':
+            return 'FAILURE - Internal Server Error'
+        else:
             break
-        yield f'{task.status} - {task.info.get("info")}'
         time.sleep(1)
 
-    print(task)
     label_mapping = {
         'benign': 'malware',
         'malware': 'benign',
@@ -27,6 +77,7 @@ def button_compute_clicked(file):
         result['label']: result['score'],
         label_mapping[result['label']]: 1-result['score']
     }
+
 
 with gr.Blocks(analytics_enabled=False) as demo:
     with gr.Row():
@@ -59,6 +110,5 @@ with gr.Blocks(analytics_enabled=False) as demo:
     )
 
 
-app = FastAPI()
+demo.queue()
 gr.mount_gradio_app(app, demo, '/')
-    
