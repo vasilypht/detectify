@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 
-from dotenv import load_dotenv
-
 
 SOURCE_DIR = Path(__file__).parent
 PROJECT_DIR = SOURCE_DIR.parent
@@ -21,6 +19,7 @@ class RedisSchema:
     store_db_index: int = 1
 
 
+@dataclass
 class RabbitMQSchema:
     host: str = 'localhost'
     username: str = 'guest'
@@ -39,6 +38,7 @@ class CelerySchema:
     broker_uri: str = f'amqp://{rabbitmq.username}:{rabbitmq.password}@{rabbitmq.host}:{rabbitmq.port}'
 
 
+@dataclass
 class ModelSchema:
     path: str = str(MODEL_DIR)
     device: str = 'cpu'
@@ -46,8 +46,14 @@ class ModelSchema:
 
 
 @dataclass
+class GradioSchema:
+    cache_dir: str = str(CACHE_DIR)
+
+
+@dataclass
 class ConfigSchema:
     celery: CelerySchema = CelerySchema()
+    gradio: GradioSchema = GradioSchema()
     model: ModelSchema = ModelSchema()
 
 
