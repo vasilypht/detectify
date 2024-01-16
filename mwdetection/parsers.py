@@ -371,7 +371,7 @@ class HTTPConversationsParser:
         else:
             info = data.get(sandbox, [])
 
-        format_map = map(lambda x: f"{x['request_method']} {x['url']}", info)
+        format_map = map(lambda x: f"{x.get('request_method', '')} {x.get('url', '')}", info)
         formatted_result = map(lambda x: f'{self.tag} {x}', format_map)
         return list(formatted_result)
 
