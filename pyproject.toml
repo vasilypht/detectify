@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "malware-detection"
+version = "0.1.0"
+description = ""
+authors = ["Vasily Perekhrest <perekhrest-vasily@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.109.0"
+uvicorn = "^0.26.0"
+aiofiles = "^23.2.1"
+torch = "^2.1.2"
+langchain = "^0.1.1"
+transformers = "^4.36.2"
+redis = "^5.0.1"
+python-multipart = "^0.0.6"
+faust-streaming = "^0.10.22"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyterlab = "^4.0.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

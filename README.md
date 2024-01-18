@@ -8,33 +8,80 @@
 A malware detection model using dynamic analysis data. The model works for Windows
 operating system files: exe, dll, pe.
 
-## Demo
 
-First you need to start the broker (RabbitMQ) and store (Redis) for the result:
+## Dependencies
+
+We create a virtual environment that will be used to install libraries:
+
+```shell
+python -m venv venv
+source venv/bin/activate
+```
+
+Next, you need to install Poetry as a library version control system:
+
+```shell
+pip install -U pip
+pip install poetry
+```
+
+Next, install all the necessary libraries:
+
+```shell
+poetry install
+```
+
+
+## Service
+
+First you need to launch a broker (Apache Kafka) and a database to store the result (Redis).
+Also, the Kafka-UI server will be launched for Kafka (if you do not need it, you can delete/comment
+out the corresponding lines of the _docker-compose_ file).
 
 ```shell
 docker-compose up -d
 ```
 
-Next you need to start the worker:
+Next you need to create topics in Kafka for the service to work:
+
+| Topic                                       | Description                                                                                       |
+|---------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `malware-detection.task.available`          | Available tasks for the classification system. The API server uses this topic to create tasks.    |
+| `malware-detection.task.sha256-calculation` | Tasks for calculating a hash for further obtaining a report.                                      |
+| `malware-detection.task.receiving-report`   | Tasks for obtaining dynamic analysis reports.                                                     |                                                                                                         |
+| `malware-detection.task.classification`     | File classification tasks using a malware detection model.                                        |
+| `malware-detection.task.completed`          | Completed tasks. They are processed by a method that generates the result and places it in Redis. |
+
+> To create topics, you can use Kafka-UI.
+
+
+Next, the workers of the classification system are launched. The main pipeline worker is launched
+with the following command:
 
 ```shell
-python -m celery -A src.celery worker --loglevel=info --pool=solo
+python -m faust -A tasks.core worker -l info --without-web
 ```
 
-After this, you can select an environment to interact with the model.
+
+To launch the model worker, use the following command:
+
+```shell
+python -m faust -A tasks.classifier worker -l info --without-web
+```
+
+> The model is launched by a separate worker, since if everything is launched together, the model will block all asynchronous code.
 
 
-### API
+### API Server
 
 To launch the API, use the following command:
 
 ```shell
-python -m uvicorn src.app_api:app --host=127.0.0.1 --port=8100
+python -m uvicorn apiserver.main:app --host=127.0.0.1 --port=8100
 ```
 
 
-### Gradio
+### Gradio (Soon...)
 
 To launch the Gradio demo, use the following command:
 
