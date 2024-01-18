@@ -1,8 +1,7 @@
 import pathlib
 
 
-TASKS_DIR = pathlib.Path(__file__).parent
-PROJECT_DIR = TASKS_DIR.parent
+PROJECT_DIR = pathlib.Path(__file__).parent.parent
 MODEL_DIR = PROJECT_DIR / 'model'
 DATA_DIR = PROJECT_DIR / 'data'
 

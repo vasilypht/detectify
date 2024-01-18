@@ -8,4 +8,4 @@ class APIServer(FastAPI):
         super().__init__(*args, **kwargs)
 
         self.kafka_producer = AIOKafkaProducer(bootstrap_servers='localhost:9094')
-        self.redis_client = Redis.from_url(url='redis://localhost:6379/0')
+        self.redis_client = Redis.from_url(url='redis://localhost:6379/0', decode_responses=True)

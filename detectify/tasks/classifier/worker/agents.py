@@ -1,13 +1,13 @@
-from mwdetection.resnet_longformer_model import MalwareDetectionPipeline
-from mwdetection.extractor import VirusTotalFeatureExtractor
-from mwdetection.parsers import extract_texts
+from detectify.resnet_longformer_model import MalwareDetectionPipeline
+from detectify.extractor import VirusTotalFeatureExtractor
+from detectify.parsers import extract_texts
 
 from ..app import app
 from .topics import (
     topic_classification,
     topic_completed_task,
 )
-from tasks.config import (
+from detectify.config import (
     MODEL_DIR,
 )
 

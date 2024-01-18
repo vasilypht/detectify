@@ -2,7 +2,7 @@ import faust
 
 
 autodiscover = [
-    'tasks.core',
+    'detectify.tasks.classifier',
 ]
 
 

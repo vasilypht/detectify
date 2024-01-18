@@ -29,13 +29,16 @@ async def create_task(request: Request, file: UploadFile):
         redis_value = {
             'task_id': task_id,
             'status': 'QUEUED',
-            'result': None,
+            'result': 'none',
         }
-        await request.app.redis_client.setex(
-            name=task_id,
-            time=timedelta(weeks=1),
-            value=json.dumps(redis_value)
-        )
+
+        async with request.app.redis_client.pipeline(transaction=True) as pipe:
+            result = await (
+                pipe.hset(task_id, mapping=redis_value)
+                    .expire(task_id, time=timedelta(weeks=1))
+                    .execute()
+            )
+
     except:
         return JSONResponse(
             content='Internal Server Error',
@@ -71,14 +74,14 @@ async def create_task(request: Request, file: UploadFile):
 @router.get('/status/{task_id:str}')
 async def task_status(request: Request, task_id: str):
     try:
-        data_str = await request.app.redis_client.get(task_id)
+        task = await request.app.redis_client.hgetall(task_id)
     except:
         return JSONResponse(
             content='Internal Server Error',
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    if not data_str:
+    if task is None:
         return JSONResponse(
             content={
                 'task_id': task_id,
@@ -87,32 +90,31 @@ async def task_status(request: Request, task_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    task_data = json.loads(data_str)
-
-    if task_data['status'] in ['QUEUED', 'STARTED', 'PROGRESS']:
+    if task['status'] in ['QUEUED', 'STARTED', 'PROGRESS']:
         return JSONResponse(
             content={
-                'task_id': task_data['task_id'],
-                'status': task_data['status'],
+                'task_id': task['task_id'],
+                'status': task['status'],
+                'meta': task.get('meta'),
             },
             status_code=status.HTTP_200_OK
         )
 
-    if task_data['status'] == 'FAILURE':
+    if task['status'] == 'FAILURE':
         return JSONResponse(
             content={
-                'task_id': task_data['task_id'],
-                'status': task_data['status'],
-                'message': task_data.get('message'),
+                'task_id': task['task_id'],
+                'status': task['status'],
+                'meta': task.get('meta'),
             },
             status_code=status.HTTP_200_OK
         )
 
     return JSONResponse(
         content={
-            'task_id': task_data['task_id'],
-            'status': task_data['status'],
-            'result': task_data['result'],
+            'task_id': task['task_id'],
+            'status': task['status'],
+            'result': json.loads(task['result']),
         },
         status_code=status.HTTP_200_OK
     )

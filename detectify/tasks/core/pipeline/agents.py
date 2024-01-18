@@ -1,11 +1,9 @@
+import json
 import hashlib
 
-from redis.asyncio import Redis
-
-from ..app import app
-from tasks.config import (
+from detectify.tasks.core import app
+from detectify.config import (
     DATA_DIR,
-    REDIS_STORE_URI,
 )
 from .topics import (
     topic_sha256_calculation,
@@ -16,18 +14,24 @@ from .topics import (
 )
 
 
-redis_store = Redis.from_url(REDIS_STORE_URI)
-
-
 @app.agent(topic_available_task)
 async def available_task_handler(tasks):
     async for task in tasks:
+        await app.redis_client.hset(task.task_id, 'status', 'STARTED')
         await topic_sha256_calculation.send(value=task)
 
 
 @app.agent(topic_sha256_calculation)
 async def sha256_calculation_handler(tasks):
     async for task in tasks:
+        await app.redis_client.hset(
+            name=task.task_id,
+            mapping={
+                'meta': 'HASH calculation',
+                'status': 'PROGRESS',
+            }
+        )
+
         hash_instance = hashlib.sha256()
         buffer = bytearray(1024 * 128)
         buffer_view = memoryview(buffer)
@@ -42,11 +46,19 @@ async def sha256_calculation_handler(tasks):
 @app.agent(topic_receiving_report)
 async def receiving_report_handler(tasks):
     async for task in tasks:
-        value = await redis_store.get(task.sha256)
+        await app.redis_client.hset(
+            name=task.task_id,
+            mapping={
+                'meta': 'Receiving report',
+                'status': 'PROGRESS',
+            }
+        )
+
+        # value = await redis_store.get(task.sha256)
 
         # TODO Add an option to ignore search
-        if value is not None:
-            raise NotImplementedError()
+        # if value is not None:
+        #    raise NotImplementedError()
 
         # TODO Receive a report via the Virus Total API.
         reports_dir = DATA_DIR / 'pe-machine-learning-dataset' / 'reports'
@@ -59,4 +71,15 @@ async def receiving_report_handler(tasks):
 @app.agent(topic_completed_task)
 async def completed_task_handler(tasks):
     async for task in tasks:
-        pass
+        result = {
+            'label': task.model_label,
+            'score': task.model_score,
+        }
+        await app.redis_client.hset(
+            name=task.task_id,
+            mapping={
+                'meta': 'Completed task',
+                'status': 'COMPLETED',
+                'result': json.dumps(result),
+            }
+        )

@@ -59,14 +59,14 @@ Next, the workers of the classification system are launched. The main pipeline w
 with the following command:
 
 ```shell
-python -m faust -A tasks.core worker -l info --without-web
+python -m faust -A detectify.tasks.core worker -l info --without-web
 ```
 
 
 To launch the model worker, use the following command:
 
 ```shell
-python -m faust -A tasks.classifier worker -l info --without-web
+python -m faust -A detectify.tasks.classifier worker -l info --without-web
 ```
 
 > The model is launched by a separate worker, since if everything is launched together, the model will block all asynchronous code.
@@ -86,7 +86,7 @@ python -m uvicorn apiserver.main:app --host=127.0.0.1 --port=8100
 To launch the Gradio demo, use the following command:
 
 ```shell
-python -m uvicorn src.app_web:app --host=127.0.0.1 --port=8100
+python -m uvicorn detectify.app_web:app --host=127.0.0.1 --port=8100
 ```
 
 
