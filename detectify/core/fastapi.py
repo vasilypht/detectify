@@ -1,9 +1,9 @@
-from fastapi import FastAPI
+import fastapi
 from aiokafka import AIOKafkaProducer
 from redis.asyncio import Redis
 
 
-class APIServer(FastAPI):
+class FastAPI(fastapi.FastAPI):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 

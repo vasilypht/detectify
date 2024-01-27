@@ -2,10 +2,10 @@ import faust
 from redis.asyncio import Redis
 
 
-class FaustApp(faust.App):
+class App(faust.App):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        
         self._redis_client = Redis.from_url(url='redis://localhost:6379/0')
 
     @property

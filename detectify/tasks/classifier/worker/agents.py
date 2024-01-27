@@ -1,8 +1,7 @@
-from detectify.resnet_longformer_model import MalwareDetectionPipeline
-from detectify.extractor import VirusTotalFeatureExtractor
-from detectify.parsers import extract_texts
+from detectify.resnet_longformer import MalwareDetectionPipeline
+from detectify.extractors import VirusTotalFeatureExtractor
 
-from ..app import app
+from detectify.tasks.classifier import app
 from .topics import (
     topic_classification,
     topic_completed_task,
@@ -20,10 +19,8 @@ async def classification_handler(tasks):
     async for task in tasks:
 
         extractor = VirusTotalFeatureExtractor.from_json(task.report_path)
-        corpus = '\n'.join(extract_texts(extractor))
+        corpus = '\n'.join(extractor.extract_all())
 
-        # TODO Make the split not in the model class, iteratively call
-        # the model with the split data.
         result = model(
             file_path=task.filepath,
             text=corpus

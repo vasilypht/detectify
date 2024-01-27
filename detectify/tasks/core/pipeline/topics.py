@@ -1,4 +1,4 @@
-from ..app import app
+from detectify.tasks.core import app
 from .models import MalwareDetectionTask
 
 

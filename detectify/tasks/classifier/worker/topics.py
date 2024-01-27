@@ -1,4 +1,4 @@
-from ..app import app
+from detectify.tasks.classifier import app
 from .models import MalwareDetectionTask
 
 

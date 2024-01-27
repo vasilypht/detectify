@@ -1,4 +1,4 @@
-from detectify.core.faustapp import FaustApp
+from detectify.core.faust import App
 
 
 autodiscover = [
@@ -6,7 +6,7 @@ autodiscover = [
 ]
 
 
-app = FaustApp(
+app = App(
     id='faust-malware-detection',
     broker='kafka://localhost:9094',
     web_enabled=False,
