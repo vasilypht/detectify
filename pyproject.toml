@@ -17,6 +17,7 @@ redis = "^5.0.1"
 python-multipart = "^0.0.6"
 faust-streaming = "^0.10.22"
 pillow = "^10.2.0"
+pyarrow = "^15.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

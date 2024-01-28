@@ -1,7 +1,3 @@
-import json
-from uuid import uuid4
-from datetime import timedelta
-
 import aiofiles
 from fastapi import (
     APIRouter,
@@ -11,7 +7,6 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 
-from detectify.core.task import Task
 from detectify.config import CACHE_DIR
 
 
@@ -24,28 +19,11 @@ async def create_task(request: Request, file: UploadFile):
         while content := await file.read(1024):
             await out_file.write(content)
 
-    task_id = str(uuid4())
-
     try:
-        result = await Task.create(task_id, app=request.app)
+        task = await request.app.create_task(
+            task_data={ 'filepath': str(CACHE_DIR / file.filename) }
+        )
     except Exception as e:
-        return JSONResponse(
-            content='Internal Server Error',
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    kafka_data = {
-        'task_id': task_id,
-        'filepath': str(CACHE_DIR / file.filename),
-    }
-
-    try:
-        await request.app.kafka_producer.send_and_wait(
-            topic='malware-detection.task.available',
-            value=json.dumps(kafka_data).encode(),
-        )
-    except:
-        await request.app.redis_client.delete(task_id)
         return JSONResponse(
             content='Internal Server Error',
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -53,7 +31,7 @@ async def create_task(request: Request, file: UploadFile):
 
     return JSONResponse(
         content={
-            'task_id': task_id,
+            'task_id': task.id,
             'status': 'QUEUED',
         },
         status_code=status.HTTP_200_OK,
@@ -63,8 +41,9 @@ async def create_task(request: Request, file: UploadFile):
 @router.get('/status/{task_id:str}')
 async def task_status(request: Request, task_id: str):
     try:
-        task = await Task.recieve(task_id, app=request.app)
+        task = await request.app.recieve_result(task_id)
     except Exception as e:
+        print(e)
         return JSONResponse(
             content='Internal Server Error',
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
