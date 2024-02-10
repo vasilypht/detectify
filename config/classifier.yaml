@@ -1,0 +1,14 @@
+cache_dir: ...
+database_uri: null
+model_path: ...
+
+redis:
+  uri: redis://localhost:6379/0
+
+kafka:
+  uri: kafka://localhost:9094
+
+  topics:
+    completed_tasks: detectify.completed-tasks
+    classifications: detectify.classifications
+

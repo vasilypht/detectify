@@ -1,6 +1,6 @@
 from detectify.tasks.classifier import app
-from .models import MalwareDetectionTask
+from .models import DetectifyTaskRecord
 
 
-topic_classification = app.topic('malware-detection.task.classification', value_type=MalwareDetectionTask)
-topic_completed_task = app.topic('malware-detection.task.completed', value_type=MalwareDetectionTask)
+topic_classifications = app.topic(app.config.kafka.topics.classifications, value_type=DetectifyTaskRecord)
+topic_completed_tasks = app.topic(app.config.kafka.topics.completed_tasks, value_type=DetectifyTaskRecord)

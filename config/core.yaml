@@ -1,0 +1,18 @@
+cache_dir: ...
+database_uri: postgresql+asyncpg://postgres@localhost:5432/db
+virustotal_apikey: ...
+
+redis:
+  uri: redis://localhost:6379/0
+
+kafka:
+  uri: kafka://localhost:9094
+
+  topics:
+    available_tasks: detectify.available-tasks
+    sha256_calculations: detectify.sha256-calculations
+    receiving_reports: detectify.receiving-reports
+    classifications: detectify.classifications
+    completed_tasks: detectify.completed-tasks
+
+

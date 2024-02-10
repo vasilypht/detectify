@@ -44,13 +44,13 @@ docker-compose up -d
 
 Next you need to create topics in Kafka for the service to work:
 
-| Topic                                       | Description                                                                                       |
-|---------------------------------------------|---------------------------------------------------------------------------------------------------|
-| `malware-detection.task.available`          | Available tasks for the classification system. The API server uses this topic to create tasks.    |
-| `malware-detection.task.sha256-calculation` | Tasks for calculating a hash for further obtaining a report.                                      |
-| `malware-detection.task.receiving-report`   | Tasks for obtaining dynamic analysis reports.                                                     |                                                                                                         |
-| `malware-detection.task.classification`     | File classification tasks using a malware detection model.                                        |
-| `malware-detection.task.completed`          | Completed tasks. They are processed by a method that generates the result and places it in Redis. |
+| Topic                           | Description                                                                                       |
+|---------------------------------|---------------------------------------------------------------------------------------------------|
+| `detectify.available-tasks`     | Available tasks for the classification system. The API server uses this topic to create tasks.    |
+| `detectify.sha256-calculations` | Tasks for calculating a hash for further obtaining a report.                                      |
+| `detectify.receiving-reports`   | Tasks for obtaining dynamic analysis reports.                                                     |
+| `detectify.classifications`     | File classification tasks using a malware detection model.                                        |
+| `detectify.completed-tasks`     | Completed tasks. They are processed by a method that generates the result and places it in Redis. |
 
 > To create topics, you can use Kafka-UI.
 

@@ -1,9 +1,9 @@
 from detectify.tasks.core import app
-from .models import MalwareDetectionTask
+from .models import DetectifyTaskRecord
 
 
-topic_available_task = app.topic('malware-detection.task.available', value_type=MalwareDetectionTask)
-topic_sha256_calculation = app.topic('malware-detection.task.sha256-calculation', value_type=MalwareDetectionTask)
-topic_receiving_report = app.topic('malware-detection.task.receiving-report', value_type=MalwareDetectionTask)
-topic_classification = app.topic('malware-detection.task.classification', value_type=MalwareDetectionTask)
-topic_completed_task = app.topic('malware-detection.task.completed', value_type=MalwareDetectionTask)
+topic_available_tasks = app.topic(app.config.kafka.topics.available_tasks, value_type=DetectifyTaskRecord)
+topic_sha256_calculations = app.topic(app.config.kafka.topics.sha256_calculations, value_type=DetectifyTaskRecord)
+topic_receiving_reports = app.topic(app.config.kafka.topics.receiving_reports, value_type=DetectifyTaskRecord)
+topic_classifications = app.topic(app.config.kafka.topics.classifications, value_type=DetectifyTaskRecord)
+topic_completed_tasks = app.topic(app.config.kafka.topics.completed_tasks, value_type=DetectifyTaskRecord)

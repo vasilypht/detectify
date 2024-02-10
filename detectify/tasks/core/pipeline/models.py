@@ -1,11 +1,11 @@
 from typing import Optional
 
-import faust
+from faust import Record
 
 
-class MalwareDetectionTask(faust.Record):
+class DetectifyTaskRecord(Record):
     task_id: str
-    filepath: str
+    file_path: str
     sha256: Optional[str] = None
     report_path: Optional[str] = None
     model_score: Optional[float] = None

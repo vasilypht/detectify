@@ -16,9 +16,14 @@ transformers = "^4.36.2"
 redis = "^5.0.1"
 python-multipart = "^0.0.6"
 faust-streaming = "^0.10.22"
-pillow = "^10.2.0"
-pyarrow = "^15.0.0"
-
+pefile = "^2023.2.7"
+omegaconf = "^2.3.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.25"}
+greenlet = "^3.0.3"
+asyncpg = "^0.29.0"
+alembic = "^1.13.1"
+psycopg2 = "^2.9.9"
+gradio = "3.50.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.0.10"
@@ -26,6 +31,10 @@ pandas = "^2.1.4"
 requests = "^2.31.0"
 python-dotenv = "^1.0.0"
 tqdm = "^4.66.1"
+openpyxl = "^3.1.2"
+scikit-learn = "^1.4.0"
+pyarrow = "^15.0.0"
+pillow = "^10.2.0"
 
 [build-system]
 requires = ["poetry-core"]

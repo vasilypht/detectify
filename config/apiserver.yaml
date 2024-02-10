@@ -1,0 +1,10 @@
+cache_dir: ...
+
+redis:
+  uri: redis://localhost:6379/0
+
+kafka:
+  uri: localhost:9094
+
+  topics:
+    available_tasks: detectify.available-tasks
