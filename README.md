@@ -90,17 +90,18 @@ python -m uvicorn detectify.app_web:app --host=127.0.0.1 --port=8100
 ```
 
 
-## Model v1.2.1
+## Model v2.0.0
 
-The model was trained based on the dataset: [DikeDataset](https://github.com/iosifache/DikeDataset)
+The model was trained based on the (40k files) dataset: [PE Malware Machine Learning Dataset](https://practicalsecurityanalytics.com/pe-malware-machine-learning-dataset/)
 
-Model weights (v1.1.1): [Google Drive](https://drive.google.com/file/d/1gV8ZzvViB2iAro3-1g_Pi-bBxJ1kW2ax/view?usp=sharing)
+Model weights: ...
 
-The architecture of the model consists of two models: ResNet-50 and Longformer
-([kazzand/ru-longformer-tiny-16384](https://huggingface.co/kazzand/ru-longformer-tiny-16384)). Next, the outputs
-of the models are concatenated and fed into a linear layer, followed by a linear layer of dimension 2.
+The architecture of the model consists of two models: ViT ([WinKawaks/vit-small-patch16-224](https://huggingface.co/WinKawaks/vit-small-patch16-224))
+and Longformer ([kazzand/ru-longformer-tiny-16384](https://huggingface.co/kazzand/ru-longformer-tiny-16384)).
+Next, the outputs of the models are concatenated and fed into a linear layer, followed by a linear layer of dimension 2.
 
-For the ResNet-50 Model, an image is built from the bytes of the file, thereby obtaining a single-channel image.
+For the ViT Model, an image is built from the bytes of the file (including .TEXT and .DATA), thereby obtaining
+a three-channel image.
 
 The language model uses file run report data. This data is obtained from VirusTotal, after which the reports are
 parsed into the required form. Also, at this stage, unnecessary data is filtered.
@@ -112,16 +113,12 @@ the best result is selected with the priority of the malicious class.
 
 ### Classification Report
 
-Accuracy: 0.999183
+Accuracy: 0.9521
 
-F1-Macro: 0.999500
+F1 macro: 0.9557
 
 |        label | precision | recall | f1-score | support |
 |-------------:|----------:|-------:|---------:|--------:|
-|       benign |      1.00 |   1.00 |     1.00 |     224 |
-|      malware |      1.00 |   1.00 |     1.00 |    1001 |
-|              |           |        |          |         |
-|     accuracy |           |        |     1.00 |    1225 |
-|    macro avg |      1.00 |   1.00 |     1.00 |    1225 |
-| weighted avg |      1.00 |   1.00 |     1.00 |    1225 |
+|       benign |      0.95 |   0.94 |     0.95 |    3377 |
+|      malware |      0.95 |   0.96 |     0.96 |    3933 |
 
